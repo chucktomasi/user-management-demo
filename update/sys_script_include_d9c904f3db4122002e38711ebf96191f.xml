@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>x_66238_usermgt.Utils</api_name>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>Utils</name>
+        <script><![CDATA[var Utils = Class.create();
+Utils.prototype = {
+	initialize: function() {
+		this.history = {};
+		this.memberTable = 'sys_user_grmember';
+	},
+	
+	saveAndClearField : function(fieldName, newValue) {
+		this.history[fieldName] = current.getValue(fieldName);
+		current.setValue(fieldName, newValue);
+	},
+	
+	saveAndClearMemberships : function() {
+		var g = new GlideRecord(this.memberTable);
+		g.addQuery('user', current.sys_id);
+		g.query();
+		this.history.memberOf = [];
+		
+		// Store, note, and remove group memberships (also updates roles.)
+		while (g.next()) {
+			gs.addInfoMessage('Member of ' + g.group.getDisplayValue() + ' removed');
+			this.history.memberOf.push(g.getValue('group'));
+			g.deleteRecord();
+		}
+	},
+	
+	getHistory : function() {
+		return this.history;
+	},
+	
+	getHistoryJSON : function() {
+		return JSON.stringify(this.history);
+	},
+	
+	setHistory : function(json) {
+		this.history = JSON.parse(json);
+	},
+	
+	restoreField : function(fieldName) {
+		current.setValue(fieldName, this.history[fieldName]);
+	},
+	
+	restoreMemberships : function() {
+		if (!this.history.memberOf)
+			return;
+		
+		if (this.history.memberOf.length == 0)
+			return;
+		
+		for (var i = 0; i < this.history.memberOf.length; i++) {
+			var g = new GlideRecord(this.memberTable);
+			g.newRecord();
+			g.user = current.sys_id;
+			g.group = this.history.memberOf[i];
+			g.insert();
+			gs.addInfoMessage('Membership to ' + g.group.getDisplayValue() + ' restored');
+		}
+		
+	},
+	
+	type: 'Utils'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2016-08-11 19:21:32</sys_created_on>
+        <sys_customer_update>true</sys_customer_update>
+        <sys_id>d9c904f3db4122002e38711ebf96191f</sys_id>
+        <sys_mod_count>3</sys_mod_count>
+        <sys_name>Utils</sys_name>
+        <sys_package display_value="User Management" source="x_66238_usermgt">21644033db0122002e38711ebf9619b6</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_replace_on_upgrade>false</sys_replace_on_upgrade>
+        <sys_scope display_value="User Management">21644033db0122002e38711ebf9619b6</sys_scope>
+        <sys_update_name>sys_script_include_d9c904f3db4122002e38711ebf96191f</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2016-08-11 19:48:26</sys_updated_on>
+    </sys_script_include>
+</record_update>
